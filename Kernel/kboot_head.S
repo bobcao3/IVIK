@@ -6,11 +6,9 @@
 #define MULTIBOOT_HEADER_FLAGS          0x00000003
 #define STACK_SIZE                      0x4000
  
-global
-
 .text
         .globl  start, _start
- 
+
 start:
 _start:
         jmp     multiboot_entry

@@ -57,10 +57,6 @@ static void itoa (char *buf, int base, int d);
 static void putchar (int c);
 void kprintf (const char *format, ...);
 
-static void init_gdtidt (void);
-static void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
-static void void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
-
 /* GDT IDT */
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
@@ -74,10 +70,17 @@ struct GATE_DESCRIPTOR {
 	short offset_high;
 };
 
+static void init_gdtidt (void);
+static void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
+static void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+
+static void load_gdtr(short i, int t);
+static void load_idtr(short i, int t);
+
 void init_gdtidt(void)
 {
-	struct SEGMENT_DESCRIPTOR	*gdt = (struct SEGMENT_DESCRIPTOR* )	0x00270000
-	struct GATE_DESCRIPTOR		*idt = (struct GATE_DESCRIPTOR)			0x0026f800
+	struct SEGMENT_DESCRIPTOR	*gdt = (struct SEGMENT_DESCRIPTOR*)	0x00270000;
+	struct GATE_DESCRIPTOR		*idt = (struct GATE_DESCRIPTOR*)	0x0026f800;
 	int i;
 
 	/* GDT */
@@ -138,7 +141,9 @@ void kstart (unsigned long magic, unsigned long addr)
     if (CHECK_FLAG (mbi->flags, 0))
         kprintf ("mem_lower = %uKB, mem_upper = %uKB\n", (unsigned) mbi->mem_lower, (unsigned) mbi->mem_upper);
     
-    kprintf ("Kernel loaded\n");
+    kprintf ("Kernel loaded, preparing gdt and idt\n");
+	init_gdtidt();
+	kprintf ("GDT and IDT inited\n");
 }
 
 /* 清屏并初始化 VIDEO，XPOS 和 YPOS。 */
