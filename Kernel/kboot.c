@@ -52,7 +52,7 @@ static int xpos; /* X 坐标。 */
 static int ypos; /* Y 坐标。 */
 static volatile unsigned char *video; /* 指向显存。 */
 
-static void get_time (void);
+void get_time (void);
 static void cls (void);
 static void itoa (char *buf, int base, int d);
 static void putchar (int c);
@@ -133,12 +133,11 @@ typedef struct st_time{
 	char h;
 	char m;
 	char s;
-	long unix;
 } st_time;
 
 static st_time time;
 
-static void get_time()
+void get_time()
 {
 	io_out8(0x70, 0x09);
 	time.yy=io_in8(0x71);
@@ -154,9 +153,46 @@ static void get_time()
 	time.s=io_in8(0x71);
 
 	kprintf("Now is : (UTC)%x/%x/%x %x:%x:%x\n", time.yy, time.mm, time.dd, time.h, time.m, time.s);
-	time.unix = 0;	// Don't know how
+	
+	return;
 }
 
+/* PIC */
+#define PIC0_ICW1		0x0020
+#define PIC0_OCW2		0x0020
+#define PIC0_IMR		0x0021
+#define PIC0_ICW2		0x0021
+#define PIC0_ICW3		0x0021
+#define PIC0_ICW4		0x0021
+#define PIC1_ICW1		0x00a0
+#define PIC1_OCW2		0x00a0
+#define PIC1_IMR		0x00a1
+#define PIC1_ICW2		0x00a1
+#define PIC1_ICW3		0x00a1
+#define PIC1_ICW4		0x00a1
+
+void init_pic(void)
+{
+	io_out8(PIC0_IMR, 0xff);
+	io_out8(PIC1_IMR, 0xff);
+
+	io_out8(PIC0_ICW1, 0x11	); // edge trigger mode
+	io_out8(PIC0_ICW2, 0xf0	); // IRQ0-7 becomes int f0h - f7h
+	io_out8(PIC0_ICW3, 1<<2	); // connect PIC1 by IRQ2
+	io_out8(PIC0_ICW4, 0x01	); // no buffer mode
+	
+	io_out8(PIC1_ICW1, 0x11	); // edge trigger mode
+	io_out8(PIC1_ICW2, 0xf8	); // IRQ8-15 becomes int f8h - ffh
+	io_out8(PIC1_ICW3, 2	); // connect PIC1 by IRQ2
+	io_out8(PIC1_ICW4, 0x01	); // no buffer mode
+
+	io_out8(PIC0_IMR, 0xfb	);
+	io_out8(PIC1_IMR, 0xff	);
+
+	kprintf("PIC inited\n");
+
+	return;
+}
 /* Kernel start */
 
 void kstart (unsigned long magic, unsigned long addr)
@@ -164,7 +200,7 @@ void kstart (unsigned long magic, unsigned long addr)
     multiboot_info_t *mbi;
 
     /* 清屏。 */
-    cls ();
+    cls();
 
     /* 将 MBI 指向 Multiboot 信息结构。 */
     mbi = (multiboot_info_t *) addr;
@@ -177,9 +213,9 @@ void kstart (unsigned long magic, unsigned long addr)
 	init_gdtidt();
 	kprintf ("GDT and IDT inited\n");
 
+	init_pic();
 	get_time();
-	kprintf ("Year : %x\n", time.yy);
-
+	
 	return;
 }
 
