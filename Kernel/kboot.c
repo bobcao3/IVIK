@@ -55,9 +55,76 @@ static volatile unsigned char *video; /* 指向显存。 */
 static void cls (void);
 static void itoa (char *buf, int base, int d);
 static void putchar (int c);
-void printf (const char *format, ...);
+void kprintf (const char *format, ...);
 
-void cmain (unsigned long magic, unsigned long addr)
+static void init_gdtidt (void);
+static void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
+static void void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+
+/* GDT IDT */
+struct SEGMENT_DESCRIPTOR {
+	short limit_low, base_low;
+	char base_mid, access_right;
+	char limit_high, base_high;
+};
+
+struct GATE_DESCRIPTOR {
+	short offset_low, selector;
+	char dw_count, access_right;
+	short offset_high;
+};
+
+void init_gdtidt(void)
+{
+	struct SEGMENT_DESCRIPTOR	*gdt = (struct SEGMENT_DESCRIPTOR* )	0x00270000
+	struct GATE_DESCRIPTOR		*idt = (struct GATE_DESCRIPTOR)			0x0026f800
+	int i;
+
+	/* GDT */
+	for (i = 0; i < 8192; i++) {
+		set_segmdesc(gdt + i, 0, 0, 0);	
+	}
+	set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, 0x4092);
+	set_segmdesc(gdt + 2, 0x000b8000, 0x00280000, 0x409a);
+	load_gdtr(0xffff, 0x00270000);
+	
+	/* IDT */
+	for (i = 0; i < 256; i++) {
+		set_gatedesc(idt + i, 0, 0, 0);	
+	}
+	load_idtr(0x7ff, 0x0026f800);
+
+	return;
+}
+
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar)
+{
+	if (limit > 0xfffff) {
+		ar |= 0x8000;
+		limit /= 0x1000;
+	}
+	sd->limit_low	 = limit & 0xffff;
+	sd->base_low	 = base & 0xffff;
+	sd->base_mid	 = (base >> 16) & 0xff;
+	sd->access_right = ar & 0xff;
+	sd->limit_high	 = ((limit >> 16) & 0x0f) | ((ar >> 8) & 0xf0);
+	sd->base_high	 = (base >> 24) & 0xff;
+	return;
+}
+
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar)
+{
+	gd->offset_low	 = offset & 0xffff;
+	gd->selector	 = selector;
+	gd->dw_count	 = (ar >> 8) & 0xff;
+	gd->access_right = ar & 0xff;
+	gd->offset_high	 = (offset >> 16) & 0xffff;
+	return;
+}
+
+/* Kernel start */
+
+void kstart (unsigned long magic, unsigned long addr)
 {
     multiboot_info_t *mbi;
 
@@ -69,9 +136,9 @@ void cmain (unsigned long magic, unsigned long addr)
 
     /* mem_* 是否有效？ */
     if (CHECK_FLAG (mbi->flags, 0))
-        printf ("mem_lower = %uKB, mem_upper = %uKB\n", (unsigned) mbi->mem_lower, (unsigned) mbi->mem_upper);
+        kprintf ("mem_lower = %uKB, mem_upper = %uKB\n", (unsigned) mbi->mem_lower, (unsigned) mbi->mem_upper);
     
-    /* your code here. */
+    kprintf ("Kernel loaded\n");
 }
 
 /* 清屏并初始化 VIDEO，XPOS 和 YPOS。 */
@@ -153,7 +220,7 @@ newline:
 }
 
 /* 格式化字符串并在屏幕上输出，就像 libc 函数 printf 一样。 */
-void printf (const char *format, ...)
+void kprintf (const char *format, ...)
 {
     char **arg = (char **) &format;
     int c;

@@ -6,6 +6,8 @@
 #define MULTIBOOT_HEADER_FLAGS          0x00000003
 #define STACK_SIZE                      0x4000
  
+global
+
 .text
         .globl  start, _start
  
@@ -21,18 +23,18 @@ multiboot_header:
         .long   -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
  
 multiboot_entry:
-        /* 初始化堆栈指针。 */
+        /* init esp */
         movl    $(stack + STACK_SIZE), %esp
  
-        /* 重置 EFLAGS。 */
+        /* reset EFLAGS */
         pushl   $0
         popf
  
         pushl   %ebx
         pushl   %eax
  
-        /* 现在进入 C main 函数... */
-        call    cmain
+        /* Jump to main function of C */
+        call    kstart
  
 loop:   hlt
         jmp     loop
