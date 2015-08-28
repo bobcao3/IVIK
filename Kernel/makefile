@@ -3,7 +3,7 @@ LD = /opt/32/bin/ld
 OBJS = kboot.o kboot_head.o KernelFunc.o
 
 kboot.o: kboot.c 
-	${CC} -c -o $@ $? -fno-builtin
+	${CC} -c -o $@ $? -fno-builtin -O3 -Ofast
 
 kboot_head.o: kboot_head.S
 	${CC} -c -o $@ $?

@@ -52,10 +52,13 @@ static int xpos; /* X 坐标。 */
 static int ypos; /* Y 坐标。 */
 static volatile unsigned char *video; /* 指向显存。 */
 
+static void get_time (void);
 static void cls (void);
 static void itoa (char *buf, int base, int d);
 static void putchar (int c);
 void kprintf (const char *format, ...);
+
+#include "KernelFunc.h"
 
 /* GDT IDT */
 struct SEGMENT_DESCRIPTOR {
@@ -73,9 +76,6 @@ struct GATE_DESCRIPTOR {
 static void init_gdtidt (void);
 static void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 static void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
-
-static void load_gdtr(short i, int t);
-static void load_idtr(short i, int t);
 
 void init_gdtidt(void)
 {
@@ -125,6 +125,38 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar)
 	return;
 }
 
+/* Time */
+typedef struct st_time{
+	char yy;
+	char mm;
+	char dd;
+	char h;
+	char m;
+	char s;
+	long unix;
+} st_time;
+
+static st_time time;
+
+static void get_time()
+{
+	io_out8(0x70, 0x09);
+	time.yy=io_in8(0x71);
+	io_out8(0x70, 0x08);
+	time.mm=io_in8(0x71);
+	io_out8(0x70, 0x07);
+	time.dd=io_in8(0x71);
+	io_out8(0x70, 0x04);
+	time.h=io_in8(0x71);
+	io_out8(0x70, 0x02);
+	time.m=io_in8(0x71);
+	io_out8(0x70, 0x00);
+	time.s=io_in8(0x71);
+
+	kprintf("Now is : (UTC)%x/%x/%x %x:%x:%x\n", time.yy, time.mm, time.dd, time.h, time.m, time.s);
+	time.unix = 0;	// Don't know how
+}
+
 /* Kernel start */
 
 void kstart (unsigned long magic, unsigned long addr)
@@ -139,12 +171,19 @@ void kstart (unsigned long magic, unsigned long addr)
 
     /* mem_* 是否有效？ */
     if (CHECK_FLAG (mbi->flags, 0))
-        kprintf ("mem_lower = %uKB, mem_upper = %uKB\n", (unsigned) mbi->mem_lower, (unsigned) mbi->mem_upper);
+        kprintf ("mem_lower = %uKB, mem_upper = %uKB, installed = %uMB\n", (unsigned) mbi->mem_lower, (unsigned) mbi->mem_upper, (unsigned) (mbi->mem_upper+1024) >> 10);
     
-    kprintf ("Kernel loaded, preparing gdt and idt\n");
+    kprintf ("Kernel loaded\n");
 	init_gdtidt();
 	kprintf ("GDT and IDT inited\n");
+
+	get_time();
+	kprintf ("Year : %x\n", time.yy);
+
+	return;
 }
+
+/* Kernel 80x24 text display */
 
 /* 清屏并初始化 VIDEO，XPOS 和 YPOS。 */
 static void cls (void)
@@ -268,4 +307,5 @@ string:
             }
         }
     }
+	return;
 }
