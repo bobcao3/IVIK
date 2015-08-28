@@ -1,12 +1,19 @@
 CC = /opt/32/bin/gcc
 LD = /opt/32/bin/ld
+OBJS = kboot.o kboot_head.o KernelFunc.o
 
-kernel: kboot.c kboot_head.S KernelFunc.asm
-	nasm KernelFunc.asm -f elf -Xgnu -o KernelFunc.o
-	${CC} kboot.c -c -fno-builtin
-	${CC} kboot_head.S -c
-	${LD} kboot.o kboot_head.o KernelFunc.o -s -o kernel -Ttext 0x100000 --entry=start
+kboot.o: kboot.c 
+	${CC} -c -o $@ $? -fno-builtin
+
+kboot_head.o: kboot_head.S
+	${CC} -c -o $@ $?
+
+KernelFunc.o: KernelFunc.asm
+	nasm -f elf -o $@ $?
+
+kernel: ${OBJS}
+	${LD} $? -s -o $@ -Ttext 0x100000 --entry=start
 
 clean:
-	rm *.o
-	rm kernel
+	rm -f *.o
+	rm -f kernel
