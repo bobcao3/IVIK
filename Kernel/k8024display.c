@@ -5,6 +5,15 @@
 
 #include "KernelFunc.h"
 
+static int xpos; /* X 坐标。 */
+static int ypos; /* Y 坐标。 */
+/* 与显示相关的设置。 */
+#define COLUMNS                 80
+#define LINES                   24
+#define ATTRIBUTE               7
+#define VIDEO                   0xB8000
+volatile unsigned char *video; /* 指向显存。 */
+
 /* 清屏并初始化 VIDEO，XPOS 和 YPOS。 */
 void cls (void)
 {
@@ -16,6 +25,12 @@ void cls (void)
         *(video + i) = 0;
 
     xpos = 0;
+    ypos = 0;
+}
+
+void reset (void)
+{
+	xpos = 0;
     ypos = 0;
 }
 

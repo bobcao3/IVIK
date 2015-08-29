@@ -5,9 +5,9 @@ global	io_hlt, io_sti
 global	io_in8, io_in16, io_in32
 global	io_out8, io_out16, io_out32
 
-global	pic_intf0
+global	asm_inthandler20, asm_inthandler0c, asm_inthandler0d
 
-extern	inthandlerf0
+extern	inthandler20
 
 [SECTION .text]
 
@@ -66,7 +66,11 @@ io_out32:		; void io_out32(int port, int data);
 		OUT		DX,EAX
 		RET
 
-pic_intf0:		; void pic_intf0(void);
+asm_inthandler0c:
+asm_inthandler0d:
+		IRETD
+
+asm_inthandler20:		; void pic_int20(int* esp);
 		PUSH	ES
 		PUSH	DS
 		PUSHAD
@@ -75,7 +79,7 @@ pic_intf0:		; void pic_intf0(void);
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	inthandlerf0
+		CALL	inthandler20
 		POP		EAX
 		POPAD
 		POP		DS

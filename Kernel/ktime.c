@@ -3,6 +3,8 @@
  */
 #include "KernelFunc.h"
 
+static unsigned int ktick;
+
 /* Time */
 void get_time(void)
 {
@@ -24,11 +26,19 @@ void get_time(void)
 	return;
 }
 
-void inthandlerf0(int *esp)
+int get_tick(void)
+{
+		return ktick;
+}
+
+void inthandler20(int *esp)
 {
 	io_out8(PIC0_OCW2, 0x60);
-	kprintf("INT F0h!\n");
-	timerctl.tick++;
+	ktick++;
+	if (ktick>=100) {
+		ktick=0;
+	}
+	kprintf("%d\n",ktick);
 	return;
 }
 
@@ -40,8 +50,8 @@ void init_pit(void)
 	io_out8(PIT_CTRL, 0x34);
 	io_out8(PIT_CNT0, 0x9c);
 	io_out8(PIT_CNT0, 0x2e);
-	timerctl.tick = 0;
-	io_out8(PIC0_IMR, 0xfe); // Enable Timer
+	ktick = 0;
+	io_out8(PIC0_IMR, 0xfc); // Enable Timer
 	io_out8(PIC1_IMR, 0xff);
 	
 	kprintf("PIT Inited\n");

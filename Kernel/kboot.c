@@ -66,24 +66,23 @@ void kstart (unsigned long magic, unsigned long addr)
 	kprintf ("Boot device = %s\n", (char*)(unsigned) mbi->boot_device);
 
 	init_gdtidt();
-	kprintf ("GDT and IDT inited\n");
-
 	init_pic();
-	io_sti();
 	init_pit();
 
 	/* Memory */
 	unsigned int memtotal = ((unsigned) mbi->mem_upper + 1024) << 10;
 	
 	memman_init();
-	memman_free(0x00110000, memtotal - 0x00110000);
+	memman_free(0x00180000, memtotal - 0x00180000);
 	kprintf("Memory free: %dKB\n", memman_total() >> 10);
-
-	while(1) {
-		io_hlt();
-		kprintf("Doom\n");
+	io_sti();
+	
+	for (;;)
+	{
+		kprintf("%d ",get_tick());
 	}
-	//return;
+	
+	return;
 }
 
 void ktimes(void)

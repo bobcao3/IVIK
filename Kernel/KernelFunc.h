@@ -3,7 +3,9 @@
  */
 
 /* Kernel Func.asm */
-void pic_intf0(void);
+void asm_inthandler20(void);
+void asm_inthandler0c(void);
+void asm_inthandler0d(void);
 
 /* GDT IDT */
 void load_gdtr(short i, int t);
@@ -26,14 +28,6 @@ void cls (void);
 static void itoa (char *buf, int base, int d);
 static void putchar (int c);
 void kprintf (const char *format, ...);
-/* 与显示相关的设置。 */
-#define COLUMNS                 80
-#define LINES                   24
-#define ATTRIBUTE               7
-#define VIDEO                   0xB8000
-static int xpos; /* X 坐标。 */
-static int ypos; /* Y 坐标。 */
-static volatile unsigned char *video; /* 指向显存。 */
 
 /* kpic.c */
 #define PIC0_ICW1		0x0020
@@ -88,14 +82,12 @@ typedef struct st_time{
 	char m;
 	char s;
 } st_time;
-struct TIMERCTL {
-	unsigned int tick;
-};
-struct TIMERCTL timerctl;
+
 static st_time time;
 
 void get_time(void);
 void init_pit(void);
+int get_tick(void);
 
 /* memory.c */
 #define MEMMAN_FREES	4000	 // 4000 records of memory
