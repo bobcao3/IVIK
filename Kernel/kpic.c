@@ -28,7 +28,7 @@ void init_pic(void)
 	io_out8(PIC0_ICW4, 0x01	); // no buffer mode
 	
 	io_out8(PIC1_ICW1, 0x11	); // edge trigger mode
-	io_out8(PIC1_ICW2, 0xf8	); // IRQ8-15 becomes int f8h - ffh
+	io_out8(PIC1_ICW2, 0xf8	); // IRQ8-15 becomes int f8h - feh
 	io_out8(PIC1_ICW3, 2	); // connect PIC1 by IRQ2
 	io_out8(PIC1_ICW4, 0x01	); // no buffer mode
 

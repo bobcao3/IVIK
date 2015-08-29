@@ -1,6 +1,6 @@
 CC = /opt/32/bin/gcc
 LD = /opt/32/bin/ld
-OBJS = KernelFunc.o k8024display.o kgdt_idt.o kpic.o ktime.o kboot_head.o kboot.o
+OBJS = KernelFunc.o k8024display.o memory.o kgdt_idt.o kpic.o ktime.o kboot_head.o kboot.o
 
 kboot.o: kboot.c 
 	${CC} -c -o $@ $? -fno-builtin -O3 -Ofast
@@ -18,6 +18,9 @@ kgdt_idt.o: kgdt_idt.c
 	${CC} -c -o $@ $? -fno-builtin -O3 -Ofast
 
 ktime.o: ktime.c
+	${CC} -c -o $@ $? -fno-builtin -O3 -Ofast
+
+memory.o: memory.c
 	${CC} -c -o $@ $? -fno-builtin -O3 -Ofast
 
 KernelFunc.o: KernelFunc.asm

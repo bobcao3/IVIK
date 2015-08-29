@@ -42,6 +42,8 @@ typedef struct multiboot_info
 /* 检测 FLAGS 中的位 BIT 是否被置位。 */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
+#define MEMMAN_ADDR	0x003c0000
+
 void get_time (void);
 
 #include "KernelFunc.h"
@@ -70,6 +72,15 @@ void kstart (unsigned long magic, unsigned long addr)
 
 	init_pic();
 	get_time();
+	
+	/* Memory */
+	unsigned int memtotal = ((unsigned) mbi->mem_upper + 1024) << 10;
+	struct MEMMAN *memman = (struct MEMMAN*) MEMMAN_ADDR;
+	
+	memman_init(memman);
+	memman_free(memman, 0x00110000, memtotal - 0x00110000);
+	
+	kprintf("Memory free: %dKB\n", memman_total(memman) >> 10);
 	
 	return;
 }
