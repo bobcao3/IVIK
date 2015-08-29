@@ -2,6 +2,8 @@
  * KernelFunc.h
  */
 
+/* Kernel */
+
 /* GDT IDT */
 void load_gdtr(short i, int t);
 void load_idtr(short i, int t);
@@ -66,6 +68,9 @@ static st_time time;
 /* memory.c */
 #define MEMMAN_FREES	4000	 // 4000 records of memory
 
+#define MEMMAN_ADDR	0x003c0000
+static struct MEMMAN *memman = (struct MEMMAN*) MEMMAN_ADDR;
+
 struct FREEINFO {
 	unsigned int addr, size;
 };
@@ -75,7 +80,7 @@ struct MEMMAN {
 	struct FREEINFO free[MEMMAN_FREES];
 };
 
-void memman_init (struct MEMMAN *man);
-unsigned int memman_total (struct MEMMAN *man);
-unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);
-int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);
+void memman_init (void);
+unsigned int memman_total (void);
+unsigned int memman_alloc(unsigned int size);
+int memman_free(unsigned int addr, unsigned int size);
