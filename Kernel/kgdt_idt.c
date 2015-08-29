@@ -6,23 +6,29 @@
 /* GDT IDT */
 void init_gdtidt(void)
 {
-	struct SEGMENT_DESCRIPTOR	*gdt = (struct SEGMENT_DESCRIPTOR*)	0x00270000;
-	struct GATE_DESCRIPTOR		*idt = (struct GATE_DESCRIPTOR*)	0x0026f800;
+	struct SEGMENT_DESCRIPTOR	*gdt = (struct SEGMENT_DESCRIPTOR*)	0x00010000;
+	struct GATE_DESCRIPTOR		*idt = (struct GATE_DESCRIPTOR*)	0x00020000;
 	int i;
 
 	/* GDT */
 	for (i = 0; i < 8192; i++) {
 		set_segmdesc(gdt + i, 0, 0, 0);	
 	}
-	set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, 0x4092);
-	set_segmdesc(gdt + 2, 0x000b8000, 0x00280000, 0x409a);
-	load_gdtr(0xffff, 0x00270000);
+	
+	set_segmdesc(gdt + 1, 0x00010000, 0x00100000, AR_CODE32_ER); // Kernel
+	set_segmdesc(gdt + 2, 0x00032000, 0x000b8000, AR_DATA32_RW); // 8024 Video
+	set_segmdesc(gdt + 3, 0x000107ff, 0x00010000, AR_DATA32_RW); // GDT, IDT
+	load_gdtr(0xffff, 0x00010000);
 	
 	/* IDT */
 	for (i = 0; i < 256; i++) {
-		set_gatedesc(idt + i, 0, 0, 0);	
+		set_gatedesc(idt + i, 0, 0, 0);
 	}
-	load_idtr(0x7ff, 0x0026f800);
+
+	// Broken here
+	set_gatedesc(idt + 0xf0, (int) pic_intf0, 2 * 8, AR_INTGATE32); // Timer
+	
+	load_idtr(0x7ff, 0x00020000);
 
 	return;
 }

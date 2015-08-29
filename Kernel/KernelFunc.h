@@ -2,7 +2,8 @@
  * KernelFunc.h
  */
 
-/* Kernel */
+/* Kernel Func.asm */
+void pic_intf0(void);
 
 /* GDT IDT */
 void load_gdtr(short i, int t);
@@ -35,9 +36,33 @@ static int ypos; /* Y 坐标。 */
 static volatile unsigned char *video; /* 指向显存。 */
 
 /* kpic.c */
+#define PIC0_ICW1		0x0020
+#define PIC0_OCW2		0x0020
+#define PIC0_IMR		0x0021
+#define PIC0_ICW2		0x0021
+#define PIC0_ICW3		0x0021
+#define PIC0_ICW4		0x0021
+#define PIC1_ICW1		0x00a0
+#define PIC1_OCW2		0x00a0
+#define PIC1_IMR		0x00a1
+#define PIC1_ICW2		0x00a1
+#define PIC1_ICW3		0x00a1
+#define PIC1_ICW4		0x00a1
+
 void init_pic(void);
 
 /* kgdt_idt.c */
+#define ADR_IDT			0x0026f800
+#define LIMIT_IDT		0x000007ff
+#define ADR_GDT			0x00270000
+#define LIMIT_GDT		0x0000ffff
+#define LIMIT_BOTPAK	0x0007ffff
+#define AR_DATA32_RW	0x4092
+#define AR_CODE32_ER	0x409a
+#define AR_LDT			0x0082
+#define AR_TSS32		0x0089
+#define AR_INTGATE32	0x008e
+
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
 	char base_mid, access_right;
@@ -63,7 +88,14 @@ typedef struct st_time{
 	char m;
 	char s;
 } st_time;
+struct TIMERCTL {
+	unsigned int tick;
+};
+struct TIMERCTL timerctl;
 static st_time time;
+
+void get_time(void);
+void init_pit(void);
 
 /* memory.c */
 #define MEMMAN_FREES	4000	 // 4000 records of memory

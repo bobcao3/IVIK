@@ -27,7 +27,7 @@ KernelFunc.o: KernelFunc.asm
 	nasm -f elf -o $@ $?
 
 kernel: ${OBJS}
-	${LD} $? -s -o $@ -Ttext 0x100000 --entry=start
+	${LD} ${OBJS} -s -o $@ -Ttext 0x100000 --entry=start
 
 clean:
 	rm -f *.o

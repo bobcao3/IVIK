@@ -1,9 +1,13 @@
 [BITS 32]
 
 global	load_gdtr, load_idtr
-global	io_hlt
-global	io_in8,  io_in16,  io_in32
+global	io_hlt, io_sti
+global	io_in8, io_in16, io_in32
 global	io_out8, io_out16, io_out32
+
+global	pic_intf0
+
+extern	inthandlerf0
 
 [SECTION .text]
 
@@ -21,6 +25,10 @@ load_idtr:		; void load_idtr(int limit, int addr);
 
 io_hlt:			; void io_hlt(void);
 		HLT
+		RET
+		
+io_sti:			; void io_hlt(void);
+		STI
 		RET
 
 io_in8:			; int io_in8(int port);
@@ -58,3 +66,18 @@ io_out32:		; void io_out32(int port, int data);
 		OUT		DX,EAX
 		RET
 
+pic_intf0:		; void pic_intf0(void);
+		PUSH	ES
+		PUSH	DS
+		PUSHAD
+		MOV		EAX,ESP
+		PUSH	EAX
+		MOV		AX,SS
+		MOV		DS,AX
+		MOV		ES,AX
+		CALL	inthandlerf0
+		POP		EAX
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD

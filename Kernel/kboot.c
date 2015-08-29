@@ -69,17 +69,26 @@ void kstart (unsigned long magic, unsigned long addr)
 	kprintf ("GDT and IDT inited\n");
 
 	init_pic();
-	get_time();
-	
+	io_sti();
+	init_pit();
+
 	/* Memory */
 	unsigned int memtotal = ((unsigned) mbi->mem_upper + 1024) << 10;
 	
 	memman_init();
 	memman_free(0x00110000, memtotal - 0x00110000);
-	
 	kprintf("Memory free: %dKB\n", memman_total() >> 10);
-	
-	return;
+
+	while(1) {
+		io_hlt();
+		kprintf("Doom\n");
+	}
+	//return;
 }
 
+void ktimes(void)
+{
+	kprintf("A");
+	return;
+}
 

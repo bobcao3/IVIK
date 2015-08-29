@@ -33,7 +33,6 @@ multiboot_entry:
  
         /* Jump to main function of C */
         call    kstart
- 
 loop:   hlt
         jmp     loop
  
